@@ -24,6 +24,7 @@ export type PostgresError = {
 	length: number;
 	code: string;
 	detail: string;
+	hint?: string;
 	schema: string;
 	table: string;
 	column?: string;

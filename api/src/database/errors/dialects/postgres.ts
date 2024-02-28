@@ -5,6 +5,7 @@ import {
 	RecordNotUniqueError,
 	ValueOutOfRangeError,
 	ValueTooLongError,
+	ExceptionRaisedHintError,
 } from '@directus/errors';
 import type { PostgresError } from './types.js';
 
@@ -14,6 +15,7 @@ enum PostgresErrorCodes {
 	NUMERIC_VALUE_OUT_OF_RANGE = '22003',
 	UNIQUE_VIOLATION = '23505',
 	VALUE_LIMIT_VIOLATION = '22001',
+	RAISE_EXCEPTION = 'P0001',
 }
 
 export function extractError(error: PostgresError): PostgresError | Error {
@@ -28,6 +30,8 @@ export function extractError(error: PostgresError): PostgresError | Error {
 			return notNullViolation(error);
 		case PostgresErrorCodes.FOREIGN_KEY_VIOLATION:
 			return foreignKeyViolation(error);
+		case PostgresErrorCodes.RAISE_EXCEPTION:
+			return exceptionRaised(error);
 		default:
 			return error;
 	}
@@ -114,4 +118,16 @@ function foreignKeyViolation(error: PostgresError) {
 		collection,
 		field,
 	});
+}
+
+function exceptionRaised(error: PostgresError) {
+	const { hint } = error;
+
+	if (hint) {
+		return new ExceptionRaisedHintError({
+			hint: hint
+		});
+	}
+
+	return error;
 }
